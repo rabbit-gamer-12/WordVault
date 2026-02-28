@@ -72,7 +72,7 @@ def alert():
         msg["Subject"] = "Securety alert"
         msg["From"] = progeml
         msg["To"] = email
-        the_time = datetime.now().strftime("%I:%M %p %d %m %y")
+        the_time = datetime.now().strftime("%I:%M %p %d/%m/%y")
         msg.set_content(f"someone has gaind accses to your passwords at {the_time}")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login(progeml, progpas)
