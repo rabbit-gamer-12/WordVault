@@ -2,8 +2,16 @@ from operator import truediv
 from cryptography.fernet import Fernet
 from email.message import EmailMessage
 from datetime import datetime
-import difflib, os, json, time, smtplib, random, string, socket
+import difflib, os, json, time, smtplib, random, string, socket, platform
 
+system = platform.system().lower()
+if system == "darwin":
+    system = "mac"
+elif system == "windows":
+    system = "windows"
+else:
+    print("sorry but this program was not desined for your opperating system")
+    time.sleep(5)
 
 empty_dict = {
 }
@@ -39,24 +47,31 @@ send_alert = codes_passwords["send_email"]
 locked = codes_passwords["locked"]
 attempts = codes_passwords["failed_attempts"]
 
-
-
+defolt = "windows shortcuts"
+short_cut = defolt
 with open("languages.json", "r", encoding="utf-8") as lang:
     languages = json.load(lang)
 
-with open("windows_shortcuts.json", "r") as w:
-    windows_shortcuts = json.load(w)
+if system == "Windows":
+    with open("windows_shortcuts.json", "r", encoding="utf-8") as w:
+        shortcuts = json.load(w)
+        short_cut = "windows shortcuts"
 
-with open("book_pages.json", "r") as b:
+elif system == "Mac":
+    with open("Mac_shortcuts.json", "r", encoding="utf-8") as w:
+        shortcuts = json.load(w)
+        short_cut = "mac shortcuts"
+
+with open("book_pages.json", "r", encoding="utf-8") as b:
     book_pages = json.load(b)
 
-with open("book_links.json", "r") as l:
+with open("book_links.json", "r", encoding="utf-8") as l:
     book_links = json.load(l)
 
-with open("dictionary.json", "r") as d:
+with open("dictionary.json", "r", encoding="utf-8") as d:
     dictionary_2 = json.load(d)
 
-with open("available_books.json", "r") as a:
+with open("available_books.json", "r", encoding="utf-8") as a:
     available_books = json.load(a)
 
 def has_internet(host="8.8.8.8", port=53, timeout=3):
@@ -133,27 +148,33 @@ def update(name="data"):
         f.write(encrypted)
 
     # normal (non-encrypted) files
-    with open("windows_shortcuts.json", "w") as f:
-        json.dump(windows_shortcuts, f, indent=4)
+    if system == "Windows":
+        with open("windows_shortcuts.json", "w", encoding="utf-8") as f:
+            json.dump(shortcuts, f, indent=4)
 
-    with open("book_pages.json", "w") as f:
+    elif system == "Mac":
+        with open("Mac_shortcuts.json", "w", encoding="utf-8") as f:
+            json.dump(shortcuts, f, indent=4)
+
+    with open("book_pages.json", "w", encoding="utf-8") as f:
         json.dump(book_pages, f, indent=4)
 
-    with open("book_links.json", "w") as f:
-        json.dump(book_links, f ,indent=4)
+    with open("book_links.json", "w", encoding="utf-8") as f:
+        json.dump(book_links, f, indent=4)
 
-    with open("dictionary.json", "w") as f:
+    with open("dictionary.json", "w", encoding="utf-8") as f:
         json.dump(dictionary_2, f, indent=4)
 
-    with open("available_books.json", "w") as f:
-        json.dump(available_books, f)
+    with open("available_books.json", "w", encoding="utf-8") as f:
+        json.dump(available_books, f, indent=4)
 
     with open("languages.json", "w", encoding="utf-8") as f:
-        json.dump(languages, f, indent=4)
+        json.dump(languages, f, indent=4, ensure_ascii=False)
     
 def translate_language():
+    print("you can stop at anytime by typing qqwertyuiop")
     while True:
-        print("you can stop at anytime by typing qqwertyuiop")
+        
 
         user_input = input("press 1 for general word search, press 2 for specific word search: ").strip().lower()
 
@@ -254,6 +275,7 @@ def find_dict(dictionary):
     logged_in = False
 
     while True:
+        print("you can stop at any time by typing qqwertyuiop")
 
         # ---------- PASSWORD PROTECTED DICTIONARY ----------
         if dictionary == codes_passwords:
@@ -306,20 +328,27 @@ def find_dict(dictionary):
                 if dictionary == codes_passwords:
                     print("username:", value[0])
                     print("password:", value[1], "\n")
+                elif dictionary == shortcuts:
+                    print(f"to {key_word} you can press")
+                    for combo in value:
+                        print(f"- {combo}")
                 else:
                     print(key_word, "can mean:")
                     for i in value:
-                        print("-", i)
+                        print(f"- {i}")
                     print()
-
+             
             else:
                 if dictionary == codes_passwords:
                     print(value, "\n")
+                elif dictionary == shortcuts:
+                    print(f"to {key_word} press {value}")
                 else:
-                    print(key_word, "means:", value, "\n")
+                    print(f"{key_word} means: {value}\n")
 
-            input("press enter to continue")
-            os.system("cls" if os.name == "nt" else "clear")
+            if dictionary == codes_passwords:
+                input("press enter to continue")
+                os.system("cls" if os.name == "nt" else "clear")
 
         else:
 
@@ -339,23 +368,28 @@ def find_book_pages():
     in_book = False
 
     while True:
+        print("you can stop at any time by typing qqwertyuiop")
         if not in_book:
             print("available books")
             for i in available_books:
                 print("-", i)
             book = input("what book do you want? ").lower()
+            if book == "qqwertyuiop":
+                return
 
         if book in available_books:
             topic = input("enter key word: ").strip().lower()
+            if topic == "qqwertyuiop":
+                return
             in_book = True
             if isinstance(book_pages[book][topic], list):
                 print(topic, "is on pages")
                 for I in book_pages[book][topic]:
                     print(I)
-                break
+                
             elif book in book_pages and topic in book_pages[book]:
                 print(book_pages[book][topic], "\n")
-                break
+                
             else:
                 matches = difflib.get_close_matches(topic, book_pages[book].keys(), n=3)
                 if matches:
@@ -364,7 +398,7 @@ def find_book_pages():
                         print("-", word)
                 else:
                     print("word not found")
-                    break
+                    
         else:
             print("book not found, available book's")
             for i in available_books:
@@ -372,6 +406,7 @@ def find_book_pages():
             print()
 
 def add(dictionary, name):
+    
     while True:
         print("you can stop at any time by typing qqwertyuiop")
 
@@ -488,10 +523,10 @@ def add(dictionary, name):
 
 
 def eddit(dictionary, name):
-    print("You can stop at any time by typing 'qqwertyuiop'")
+    
 
     while True:
-
+        print("You can stop at any time by typing qqwertyuiop")
         delete = input("Do you want to delete something? (Y/N): ").strip().upper()
         if "Y" in delete:
             delete = "Y"
@@ -659,8 +694,8 @@ def eddit(dictionary, name):
 
 
   
-available_dicts_and_actions  = ["dictionary", "book links", "codes/passwords(password protected)", "book pages", "windows shortcuts","languages", "add to", "eddit", "change password", "stop"]
-available_dicts = [ "dictionary", "book links", "codes/passwords(password protected)", "book pages", "windows shortcuts", "languages"]
+available_dicts_and_actions  = ["dictionary", "book links", "codes/passwords(password protected)", "book pages", short_cut,"languages", "add to", "eddit", "change password", "stop", "clear screen"]
+available_dicts = [ "dictionary", "book links", "codes/passwords(password protected)", "book pages", short_cut, "languages"]
 available_numbers = ["1", "2", "3", "4", "5", "6"]
 
 if locked:
@@ -677,6 +712,20 @@ if locked:
     else:
         print("wrong code")
 
+stuff = {
+    "1": "dictionary",
+    "2": "book links",
+    "3": "codes/passwords(password protected)",
+    "4": "book pages",
+    "5": short_cut,
+    "6": "languages",
+    "7": "add to",
+    "8": "eddit",
+    "9": "change password",
+    "10": "stop",
+    "11": "clear screen"
+}
+
 while True:
     
         if email == "":
@@ -692,38 +741,41 @@ while True:
                 codes_passwords["password_main"] = pe1
                 password = pe1
                 update("password")
-        numb = 1
-        for num in available_dicts_and_actions:
-            print("-", numb, num)
-            numb += 1
+        
+        for key in stuff:
+            print(f"- {key} {stuff[key]}")
         input_dict = input("what dictionary or action do you want? ").strip().lower()
-        numb = 0
+        if input_dict in stuff:
+            input_dict = stuff[input_dict]
+        
 
-        if input_dict in ["stop", "10"]:
+        if input_dict == "stop":
             update("all dictionaries")
             print("Goodbye!")
             time.sleep(0.5)
             os.system("cls" if os.name == "nt" else "clear")
             break
+        elif input_dict == "clear screen":
+            os.system("cls" if os.name == "nt" else "clear")
         elif attempts == 4:
                 print("password entered too many times incorrectly")
                 alert_email()
                 exit()
     
-        elif input_dict in ("dictionary", "1"):
+        elif input_dict == "dictionary":
             find_dictionary(dictionary_2)
         elif input_dict in ("book links", "2"):
             find_dict(book_links)
-        elif input_dict in ("codes", "passwords", "3"):
+        elif input_dict == "codes/passwords(password protected)":
         
             find_dict(codes_passwords)
-        elif input_dict in ("book pages", "4"):
+        elif input_dict == "book pages":
             find_book_pages()
-        elif input_dict in ("windows shortcuts", "5"):
-            find_dict(windows_shortcuts)
-        elif input_dict in ("languages", "6"):
+        elif input_dict == short_cut:
+            find_dict(shortcuts)
+        elif input_dict == "languages":
             translate_language()
-        elif input_dict in ["add to", "7"]:
+        elif input_dict == "add to":
             dictionary_add = input("what dictionary do you want to add to? ")
             if dictionary_add in available_dicts or dictionary_add in available_numbers:
             
@@ -733,8 +785,8 @@ while True:
                     add(book_links, "book links")
                 elif dictionary_add in ["book pages", "4"]:
                     add(book_pages, "book pages")
-                elif dictionary_add in ["windows shortcuts", "5"]:
-                    add(windows_shortcuts, "windows shortcuts")
+                elif dictionary_add in [short_cut, "5"]:
+                    add(shortcuts, short_cut)
                 elif dictionary_add in ["languages", "6"]:
                     add(languages, "languages")
             
@@ -759,7 +811,7 @@ while True:
                 for i in available_dicts:
                     print("-", i)
     
-        elif input_dict in ["eddit", "8"]:
+        elif input_dict == "eddit":
             dictionary_eddit = input("what dictionary do you want to eddit ")
             if dictionary_eddit in available_dicts or dictionary_eddit in available_numbers:
             
@@ -769,8 +821,8 @@ while True:
                     eddit(book_links, "book links")
                 elif dictionary_eddit in ["book pages", "4"]:
                     eddit(book_pages, "book pages")
-                elif dictionary_eddit in ["windows shortcuts", "5"]:
-                    eddit(windows_shortcuts, "windows shortcuts")
+                elif dictionary_eddit in [short_cut, "5"]:
+                    eddit(shortcuts, short_cut)
                 elif dictionary_eddit in ("languages", "6"):
                     eddit(languages, "languages")
             
@@ -795,7 +847,7 @@ while True:
                 for i in available_dicts:
                     print("-", i)
 
-        elif input_dict in ["change password", "9"]:
+        elif input_dict == "change password":
             cp = input("please enter current password: ")
             os.system("cls" if os.name == "nt" else "clear")
             if attempts >= 4:
